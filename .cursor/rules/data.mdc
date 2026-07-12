@@ -1,0 +1,30 @@
+---
+description: Правила для JSON-конфигов MyDash
+globs: data/*.json
+alwaysApply: false
+---
+
+# Конфигурационные файлы
+
+## Формат
+
+- Файлы в `data/` должны быть валидным JSON
+- Без комментариев и trailing commas
+
+## default-config.json
+
+```json
+{
+  "widgets": ["clock", "weather", "notes"],
+  "settings": {
+    "theme": "light",
+    "city": "Moscow"
+  }
+}
+```
+
+## Правила
+
+- Массив `widgets` содержит только id, зарегистрированные в `js/registry.js`
+- Значение `settings.theme` — `"light"` или `"dark"`
+- После изменения конфига проверь синтаксис JSON (запятые, кавычки)

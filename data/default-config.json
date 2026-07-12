@@ -1,0 +1,11 @@
+{
+  "widgets": [
+    "clock",
+    "weather",
+    "notes"
+  ],
+  "settings": {
+    "theme": "light",
+    "city": "Moscow"
+  }
+}

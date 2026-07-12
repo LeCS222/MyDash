@@ -1,0 +1,31 @@
+---
+description: Контракт виджетов MyDash
+globs: js/widgets/*.js
+alwaysApply: false
+---
+
+# Контракт виджета
+
+Каждый виджет в `js/widgets/` экспортирует объект по умолчанию:
+
+```javascript
+export default {
+  id: 'widget-id',      // строковый идентификатор
+  title: 'Заголовок',   // заголовок карточки
+  init(config) {},      // подготовка состояния, загрузка из storage
+  render(container) {}, // отрисовка DOM внутрь container
+};
+```
+
+## Обязательные шаги при создании виджета
+
+1. Создать файл `js/widgets/{id}.js` по контракту выше
+2. Импортировать и зарегистрировать в `js/registry.js`
+3. Добавить id в массив `widgets` в `data/default-config.json`
+4. Добавить CSS-классы в `styles/main.css` при необходимости
+
+## Правила
+
+- Состояние сохраняй через `js/storage.js` (`get`, `set`, `remove`)
+- Не используй inline-стили (`element.style`, атрибут `style`)
+- Не обращайся к DOM вне переданного `container`, кроме глобальных событий

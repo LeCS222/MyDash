@@ -1,0 +1,50 @@
+---
+description: Правила UI и фронтенда MyDash — стили, адаптивность, доступность
+globs:
+  - styles/*.css
+  - index.html
+  - js/widgets/*.js
+alwaysApply: false
+---
+
+# UI и фронтенд
+
+## Стили
+
+- Только внешний CSS в `styles/main.css`; никаких inline-стилей
+  (`element.style`, атрибут `style`, тег `<style>`) и `!important`
+- Цвета, отступы и тени — через CSS-переменные из `:root`/`.theme-*`,
+  а не хардкод hex внутри правил. Новую тему-зависимую величину добавляй как `--var`
+- Единицы: `rem`/`em` для типографики и отступов, `%`/`fr` для раскладки;
+  избегай фиксированных `px` для размеров контейнеров
+- Классы — в `kebab-case`, по схеме `{widget}-{element}` (`weather-temp`, `clock-date`)
+- Селекторы плоские и низкоспецифичные; не завязывайся на `id` для стилизации
+- Анимируй только `transform`/`opacity`; уважай `prefers-reduced-motion`
+
+## Адаптивность
+
+- Mobile-first: базовые стили для мобильного, расширяй через `min-width` медиазапросы
+- Сетка тянется автоматически: `grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))` —
+  не задавай фиксированное число колонок
+- Тач-цели ≥ 44×44px; контент не должен вызывать горизонтальный скролл
+- Проверяй раскладку на ширинах ~360px, ~768px и ~1200px
+
+## Доступность (a11y)
+
+- Семантический HTML: `header`/`main`/`article`/`button`; заголовки по иерархии
+- У иконочных кнопок обязателен `aria-label` (см. `#theme-toggle`)
+- Видимый фокус: не убирай `outline` без замены; используй `:focus-visible`
+- У полей ввода есть `<label>` или `aria-label`; у `textarea` — понятный `placeholder`
+- Контраст текста к фону ≥ 4.5:1; не передавай смысл только цветом
+- Всё интерактивное доступно с клавиатуры; не вешай обработчики на неинтерактивные `div`
+
+```css
+/* ✅ GOOD — переменные, доступный фокус */
+.notes-textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ❌ BAD — хардкод цвета и снятый фокус */
+.notes-textarea:focus { outline: none; border: 1px solid #4f46e5 !important; }
+```
