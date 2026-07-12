@@ -282,3 +282,39 @@ button:hover {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+/* Pomodoro widget */
+.pomodoro-phase {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.pomodoro-time {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 0.25rem;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.pomodoro-controls button {
+  flex: 1;
+  min-height: 44px;
+}
+
+.pomodoro-controls button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pomodoro-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}

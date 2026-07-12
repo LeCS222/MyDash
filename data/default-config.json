@@ -3,7 +3,8 @@
     "clock",
     "weather",
     "notes",
-    "todo"
+    "todo",
+    "pomodoro"
   ],
   "settings": {
     "theme": "light",
