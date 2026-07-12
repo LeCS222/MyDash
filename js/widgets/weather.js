@@ -55,7 +55,7 @@ export default {
 
         const tempEl = document.createElement('div');
         tempEl.className = 'weather-temp';
-        tempEl.textContent = `${Math.round(data.temperature)}°`;
+        tempEl.textContent = `${Math.round(data.temperature)} °C`;
 
         const descEl = document.createElement('div');
         descEl.className = 'weather-desc';

@@ -2,7 +2,8 @@
   "widgets": [
     "clock",
     "weather",
-    "notes"
+    "notes",
+    "todo"
   ],
   "settings": {
     "theme": "light",

@@ -181,3 +181,104 @@ button {
 button:hover {
   background: var(--accent-hover);
 }
+
+/* Todo widget */
+.todo-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.todo-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.todo-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.todo-add {
+  flex-shrink: 0;
+}
+
+.todo-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--input-bg);
+}
+
+.todo-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+}
+
+.todo-checkbox {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.todo-checkbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.todo-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  font-size: 0.95rem;
+}
+
+.todo-item--done .todo-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.todo-delete {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.todo-delete:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+.todo-delete:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
