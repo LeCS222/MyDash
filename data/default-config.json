@@ -2,6 +2,7 @@
   "widgets": [
     "clock",
     "weather",
+    "currency",
     "notes",
     "todo",
     "pomodoro",
