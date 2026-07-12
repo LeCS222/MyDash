@@ -4,7 +4,8 @@
     "weather",
     "notes",
     "todo",
-    "pomodoro"
+    "pomodoro",
+    "quotes"
   ],
   "settings": {
     "theme": "light",
