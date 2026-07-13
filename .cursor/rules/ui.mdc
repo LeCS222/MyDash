@@ -32,7 +32,7 @@ alwaysApply: false
 ## Доступность (a11y)
 
 - Семантический HTML: `header`/`main`/`article`/`button`; заголовки по иерархии
-- У иконочных кнопок обязателен `aria-label` (см. `#theme-toggle`)
+- У иконочных кнопок и `<select>` обязателен `aria-label` (см. `.theme-picker`, `.widget-drag-handle`)
 - Видимый фокус: не убирай `outline` без замены; используй `:focus-visible`
 - У полей ввода есть `<label>` или `aria-label`; у `textarea` — понятный `placeholder`
 - Контраст текста к фону ≥ 4.5:1; не передавай смысл только цветом

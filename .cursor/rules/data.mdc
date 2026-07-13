@@ -26,5 +26,5 @@ alwaysApply: false
 ## Правила
 
 - Массив `widgets` содержит только id, зарегистрированные в `js/registry.js`
-- Значение `settings.theme` — `"light"` или `"dark"`
+- Значение `settings.theme` — `"light"`, `"dark"`, `"golden"`, `"birch"` или `"salad"`
 - После изменения конфига проверь синтаксис JSON (запятые, кавычки)

@@ -4,13 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MyDash</title>
+  <script>
+    (function () {
+      var theme = 'light';
+      try {
+        var raw = localStorage.getItem('mydash-config');
+        if (raw) {
+          var config = JSON.parse(raw);
+          if (config.settings && config.settings.theme) {
+            theme = config.settings.theme;
+          }
+        }
+      } catch (e) {
+        theme = 'light';
+      }
+      document.documentElement.classList.add('theme-' + theme);
+    })();
+  </script>
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
   <div id="app">
     <header class="app-header">
       <h1 class="app-logo">MyDash</h1>
-      <button id="theme-toggle" type="button" aria-label="Переключить тему">🌙</button>
+      <div class="app-controls">
+        <label class="visually-hidden" for="theme-picker">Тема оформления</label>
+        <select id="theme-picker" class="theme-picker" aria-label="Тема оформления"></select>
+      </div>
     </header>
     <main id="widget-grid" class="widget-grid"></main>
   </div>

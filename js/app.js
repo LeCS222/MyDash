@@ -1,4 +1,6 @@
 import { getWidget } from './registry.js';
+import { applyTheme, initThemePicker, normalizeTheme } from './themes.js';
+import { initLayoutDrag } from './layout.js';
 
 const CONFIG_KEY = 'mydash-config';
 
@@ -19,19 +21,19 @@ function saveConfig(config) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
-function applyThemeToCards(theme) {
-  const cards = document.querySelectorAll('.widget-card');
-  cards.forEach((card) => {
-    card.classList.remove('theme-light', 'theme-dark');
-    card.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
-  });
+function normalizeConfig(config) {
+  const before = JSON.stringify(config);
+
+  config.settings = config.settings ?? {};
+  config.settings.theme = normalizeTheme(config.settings.theme);
+  config.widgets = (config.widgets ?? []).filter((id) => getWidget(id));
+
+  return { config, changed: JSON.stringify(config) !== before };
 }
 
 function renderWidgetGrid(widgetIds, config) {
   const grid = document.getElementById('widget-grid');
   grid.innerHTML = '';
-
-  const theme = config.settings?.theme ?? 'light';
 
   for (const id of widgetIds) {
     const widget = getWidget(id);
@@ -39,42 +41,37 @@ function renderWidgetGrid(widgetIds, config) {
 
     const card = document.createElement('article');
     card.className = 'widget-card';
-    card.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+    card.dataset.widgetId = id;
+
+    const header = document.createElement('header');
+    header.className = 'widget-header';
 
     const title = document.createElement('h2');
     title.className = 'widget-title';
     title.textContent = widget.title;
 
+    const handle = document.createElement('button');
+    handle.type = 'button';
+    handle.className = 'widget-drag-handle';
+    handle.setAttribute(
+      'aria-label',
+      'Перемещение виджета: стрелки вверх, вниз, влево и вправо',
+    );
+    handle.textContent = '⠿';
+
+    header.appendChild(title);
+    header.appendChild(handle);
+
     const body = document.createElement('div');
     body.className = 'widget-body';
 
-    card.appendChild(title);
+    card.appendChild(header);
     card.appendChild(body);
     grid.appendChild(card);
 
     widget.init(config);
     widget.render(body);
   }
-}
-
-function initThemeToggle(config) {
-  const toggle = document.getElementById('theme-toggle');
-
-  function updateButton(theme) {
-    toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-  }
-
-  updateButton(config.settings?.theme ?? 'light');
-
-  toggle.addEventListener('click', () => {
-    const current = config.settings?.theme ?? 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    config.settings = config.settings ?? {};
-    config.settings.theme = next;
-    saveConfig(config);
-    applyThemeToCards(next);
-    updateButton(next);
-  });
 }
 
 function showError(message) {
@@ -88,11 +85,27 @@ function showError(message) {
 
 async function main() {
   try {
-    currentConfig = await loadConfig();
+    const loaded = await loadConfig();
+    const { config, changed } = normalizeConfig(loaded);
+    currentConfig = config;
+
+    if (changed) {
+      saveConfig(currentConfig);
+    }
+
+    applyTheme(currentConfig.settings.theme);
     renderWidgetGrid(currentConfig.widgets, currentConfig);
-    initThemeToggle(currentConfig);
-  } catch {
-    showError('Не удалось загрузить конфиг. Проверьте data/default-config.json');
+    initThemePicker(currentConfig, saveConfig);
+
+    const grid = document.getElementById('widget-grid');
+    initLayoutDrag(grid, () => currentConfig, saveConfig);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : '';
+    showError(
+      detail
+        ? `Не удалось загрузить конфиг: ${detail}`
+        : 'Не удалось загрузить конфиг. Проверьте data/default-config.json',
+    );
   }
 }
 
