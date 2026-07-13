@@ -555,3 +555,219 @@ body.is-dragging-widget .widget-drag-handle {
   color: var(--text-muted);
   margin-top: 0.75rem;
 }
+
+/* Habits widget */
+.habits-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.habits-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.habits-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.habits-add {
+  flex-shrink: 0;
+}
+
+.habits-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.habits-month {
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.habits-prev,
+.habits-next {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.habits-prev:hover:not(:disabled),
+.habits-next:hover:not(:disabled) {
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.habits-prev:focus-visible,
+.habits-next:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.habits-prev:disabled,
+.habits-next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.habits-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, var(--habits-cell));
+  gap: var(--habits-gap);
+  margin-bottom: 0.5rem;
+}
+
+.habits-weekday {
+  width: var(--habits-cell);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.habits-empty {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.habits-calendar {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.habits-calendar-track {
+  --habits-cell: 2.75rem;
+  --habits-gap: 0.25rem;
+  min-width: calc(7 * var(--habits-cell) + 6 * var(--habits-gap));
+}
+
+.habits-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.habits-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.habits-row-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+.habits-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.habits-delete {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.habits-delete:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+.habits-delete:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(7, var(--habits-cell));
+  gap: var(--habits-gap);
+}
+
+.habits-day {
+  width: var(--habits-cell);
+  height: var(--habits-cell);
+  min-width: var(--habits-cell);
+  min-height: var(--habits-cell);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.habits-day:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.habits-day--done {
+  background: var(--accent);
+  color: var(--card-bg);
+  border-color: var(--accent);
+}
+
+.habits-day--done:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.habits-day--today {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.habits-day--future:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.habits-day--empty {
+  width: var(--habits-cell);
+  height: var(--habits-cell);
+  min-width: var(--habits-cell);
+  min-height: var(--habits-cell);
+  border: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.habits-day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
