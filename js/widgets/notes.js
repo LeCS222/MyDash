@@ -14,6 +14,7 @@ export default {
     const textarea = document.createElement('textarea');
     textarea.className = 'notes-textarea';
     textarea.placeholder = 'Ваши заметки…';
+    textarea.setAttribute('aria-label', 'Заметки');
     textarea.value = savedText;
 
     let debounceTimer;

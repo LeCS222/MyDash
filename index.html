@@ -6,11 +6,11 @@
   <title>MyDash</title>
   <script>
     (function () {
-      var theme = 'light';
+      let theme = 'light';
       try {
-        var raw = localStorage.getItem('mydash-config');
+        const raw = localStorage.getItem('mydash-config');
         if (raw) {
-          var config = JSON.parse(raw);
+          const config = JSON.parse(raw);
           if (config.settings && config.settings.theme) {
             theme = config.settings.theme;
           }

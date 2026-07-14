@@ -12,6 +12,38 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function normalizeTask(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const text = typeof raw.text === 'string' ? raw.text.trim() : '';
+  if (!text) return null;
+
+  const id =
+    typeof raw.id === 'string' && raw.id.length > 0 ? raw.id : createId();
+
+  return {
+    id,
+    text,
+    done: Boolean(raw.done),
+  };
+}
+
+function normalizeTasks(saved) {
+  if (!Array.isArray(saved)) return [];
+
+  const seen = new Set();
+  const result = [];
+
+  for (const item of saved) {
+    const task = normalizeTask(item);
+    if (!task || seen.has(task.id)) continue;
+    seen.add(task.id);
+    result.push(task);
+  }
+
+  return result;
+}
+
 function createItem(task) {
   const item = document.createElement('li');
   item.className = 'todo-item';
@@ -59,7 +91,10 @@ export default {
 
   init() {
     const saved = storage.get('todo', []);
-    tasks = Array.isArray(saved) ? saved : [];
+    tasks = normalizeTasks(saved);
+    if (JSON.stringify(saved) !== JSON.stringify(tasks)) {
+      save();
+    }
   },
 
   render(container) {

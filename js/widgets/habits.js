@@ -16,6 +16,29 @@ function save() {
   storage.set('habits', habits);
 }
 
+function dedupeHabits(items) {
+  const seenIds = new Set();
+  const result = [];
+  let changed = false;
+
+  for (const habit of items) {
+    if (seenIds.has(habit.id)) {
+      changed = true;
+      continue;
+    }
+    seenIds.add(habit.id);
+
+    const uniqueDates = [...new Set(habit.dates)];
+    if (uniqueDates.length !== habit.dates.length) {
+      changed = true;
+    }
+
+    result.push({ ...habit, dates: uniqueDates });
+  }
+
+  return { habits: result, changed };
+}
+
 function createId() {
   if (crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -225,44 +248,49 @@ export default {
     const todayKey = getTodayKey();
     let sanitized = false;
 
-    habits = Array.isArray(saved)
-      ? saved
-          .filter((h) => {
-            const keep = h && typeof h.name === 'string' && h.name.trim();
-            if (!keep) sanitized = true;
-            return keep;
-          })
-          .map((h) => {
-            const rawDates = Array.isArray(h.dates) ? h.dates : [];
-            const dates = [];
-            for (const d of rawDates) {
-              if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayKey) {
-                dates.push(d);
-              } else {
-                sanitized = true;
-              }
-            }
-
-            let id;
-            if (typeof h.id === 'string' && h.id.length > 0) {
-              id = h.id;
+    let mapped = [];
+    if (Array.isArray(saved)) {
+      mapped = saved
+        .filter((h) => {
+          const keep = h && typeof h.name === 'string' && h.name.trim();
+          if (!keep) sanitized = true;
+          return keep;
+        })
+        .map((h) => {
+          const rawDates = Array.isArray(h.dates) ? h.dates : [];
+          const dates = [];
+          for (const d of rawDates) {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayKey) {
+              dates.push(d);
             } else {
               sanitized = true;
-              id = createId();
             }
+          }
 
-            return {
-              id,
-              name: h.name.trim().slice(0, NAME_MAX),
-              dates,
-              createdAt:
-                typeof h.createdAt === 'string' &&
-                /^\d{4}-\d{2}-\d{2}$/.test(h.createdAt)
-                  ? h.createdAt
-                  : todayKey,
-            };
-          })
-      : [];
+          let id;
+          if (typeof h.id === 'string' && h.id.length > 0) {
+            id = h.id;
+          } else {
+            sanitized = true;
+            id = createId();
+          }
+
+          return {
+            id,
+            name: h.name.trim().slice(0, NAME_MAX),
+            dates,
+            createdAt:
+              typeof h.createdAt === 'string' &&
+              /^\d{4}-\d{2}-\d{2}$/.test(h.createdAt)
+                ? h.createdAt
+                : todayKey,
+          };
+        });
+    }
+
+    const deduped = dedupeHabits(mapped);
+    habits = deduped.habits;
+    if (deduped.changed) sanitized = true;
 
     if (sanitized) save();
 

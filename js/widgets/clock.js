@@ -8,20 +8,29 @@ const WEEKDAYS = [
   'четверг', 'пятница', 'суббота',
 ];
 
+let intervalId = null;
+
 function pad(n) {
   return String(n).padStart(2, '0');
 }
 
 function formatTime(date) {
-  return `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 function formatDate(date) {
-  const weekday = WEEKDAYS[date.getUTCDay()];
-  const day = date.getUTCDate();
-  const month = MONTHS[date.getUTCMonth()];
-  const year = date.getUTCFullYear();
+  const weekday = WEEKDAYS[date.getDay()];
+  const day = date.getDate();
+  const month = MONTHS[date.getMonth()];
+  const year = date.getFullYear();
   return `${weekday}, ${day} ${month} ${year}`;
+}
+
+function stopTimer() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 }
 
 export default {
@@ -31,6 +40,9 @@ export default {
   init() {},
 
   render(container) {
+    stopTimer();
+    container.replaceChildren();
+
     const timeEl = document.createElement('div');
     timeEl.className = 'clock-time';
 
@@ -44,7 +56,7 @@ export default {
     }
 
     tick();
-    setInterval(tick, 1000);
+    intervalId = setInterval(tick, 1000);
 
     container.appendChild(timeEl);
     container.appendChild(dateEl);

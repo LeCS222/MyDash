@@ -50,6 +50,11 @@ export default {
   },
 
   render(container) {
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
     const timeEl = document.createElement('div');
     timeEl.className = 'pomodoro-time';
 

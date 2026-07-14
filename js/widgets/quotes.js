@@ -44,7 +44,7 @@ export default {
 
     const errorEl = document.createElement('p');
     errorEl.className = 'quotes-status quotes-error';
-    errorEl.setAttribute('aria-live', 'polite');
+    errorEl.setAttribute('aria-live', 'assertive');
     errorEl.hidden = true;
 
     const refreshBtn = document.createElement('button');

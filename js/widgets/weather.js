@@ -34,6 +34,54 @@ function describeWeather(code) {
 }
 
 let city = 'Moscow';
+let activeRequest = 0;
+
+function showLoading(container) {
+  container.replaceChildren();
+  const loadingEl = document.createElement('p');
+  loadingEl.className = 'weather-loading';
+  loadingEl.textContent = 'Загрузка…';
+  container.appendChild(loadingEl);
+}
+
+function showWeather(container, data) {
+  container.replaceChildren();
+
+  const tempEl = document.createElement('div');
+  tempEl.className = 'weather-temp';
+  tempEl.textContent = `${Math.round(data.temperature)} °C`;
+
+  const descEl = document.createElement('div');
+  descEl.className = 'weather-desc';
+  descEl.textContent = describeWeather(data.weatherCode);
+
+  const cityEl = document.createElement('div');
+  cityEl.className = 'weather-city';
+  cityEl.textContent = data.cityName;
+
+  container.appendChild(tempEl);
+  container.appendChild(descEl);
+  container.appendChild(cityEl);
+}
+
+function showError(container) {
+  container.replaceChildren();
+  const errorEl = document.createElement('p');
+  errorEl.className = 'weather-error';
+  errorEl.textContent = 'Не удалось загрузить погоду';
+  container.appendChild(errorEl);
+}
+
+async function loadWeather(container, cityName, requestId) {
+  try {
+    const data = await fetchWeather(cityName);
+    if (requestId !== activeRequest) return;
+    showWeather(container, data);
+  } catch {
+    if (requestId !== activeRequest) return;
+    showError(container);
+  }
+}
 
 export default {
   id: 'weather',
@@ -44,38 +92,9 @@ export default {
   },
 
   render(container) {
-    const loadingEl = document.createElement('p');
-    loadingEl.className = 'weather-loading';
-    loadingEl.textContent = 'Загрузка…';
-    container.appendChild(loadingEl);
-
-    fetchWeather(city)
-      .then((data) => {
-        container.innerHTML = '';
-
-        const tempEl = document.createElement('div');
-        tempEl.className = 'weather-temp';
-        tempEl.textContent = `${Math.round(data.temperature)} °C`;
-
-        const descEl = document.createElement('div');
-        descEl.className = 'weather-desc';
-        descEl.textContent = describeWeather(data.weatherCode);
-
-        const cityEl = document.createElement('div');
-        cityEl.className = 'weather-city';
-        cityEl.textContent = data.cityName;
-
-        container.appendChild(tempEl);
-        container.appendChild(descEl);
-        container.appendChild(cityEl);
-      })
-      .catch(() => {
-        container.innerHTML = '';
-        const errorEl = document.createElement('p');
-        errorEl.className = 'weather-error';
-        errorEl.textContent = 'Не удалось загрузить погоду';
-        container.appendChild(errorEl);
-      });
+    const requestId = ++activeRequest;
+    showLoading(container);
+    loadWeather(container, city, requestId);
   },
 };
 

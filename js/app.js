@@ -1,23 +1,28 @@
 import { getWidget } from './registry.js';
 import { applyTheme, initThemePicker, normalizeTheme } from './themes.js';
 import { initLayoutDrag } from './layout.js';
-
-const CONFIG_KEY = 'mydash-config';
+import * as storage from './storage.js';
 
 const EMBEDDED_DEFAULT_CONFIG = {
-  widgets: [
-    'clock',
-    'world-clock',
-    'weather',
-    'currency',
-    'notes',
-    'todo',
-    'pomodoro',
-    'quotes',
-    'habits',
-  ],
+  widgets: [],
   settings: { theme: 'light', city: 'Moscow' },
 };
+
+function isValidConfig(data) {
+  return Boolean(data && typeof data === 'object' && Array.isArray(data.widgets));
+}
+
+function loadConfig(defaultConfig) {
+  const saved = storage.get('config', null);
+  if (isValidConfig(saved)) return saved;
+  if (saved && typeof saved === 'object') {
+    return {
+      widgets: defaultConfig.widgets ?? [],
+      settings: saved.settings ?? defaultConfig.settings ?? {},
+    };
+  }
+  return defaultConfig;
+}
 
 let currentConfig = null;
 
@@ -48,16 +53,8 @@ async function fetchDefaultConfig() {
   }
 }
 
-async function loadConfig(defaultConfig) {
-  const saved = localStorage.getItem(CONFIG_KEY);
-  if (saved) {
-    return JSON.parse(saved);
-  }
-  return defaultConfig;
-}
-
 function saveConfig(config) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+  storage.set('config', config);
 }
 
 // Adds widgets from default-config.json that are missing in the saved layout.
@@ -167,7 +164,7 @@ function showError(message) {
 async function main() {
   try {
     const defaultConfig = await fetchDefaultConfig();
-    const loaded = await loadConfig(defaultConfig);
+    const loaded = loadConfig(defaultConfig);
     const { config, changed } = normalizeConfig(loaded, defaultConfig);
     currentConfig = config;
 
