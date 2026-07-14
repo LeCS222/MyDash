@@ -6,6 +6,7 @@ import todo from './widgets/todo.js';
 import pomodoro from './widgets/pomodoro.js';
 import quotes from './widgets/quotes.js';
 import habits from './widgets/habits.js';
+import worldClock from './widgets/world-clock.js';
 
 const widgets = new Map([
   [clock.id, clock],
@@ -16,6 +17,7 @@ const widgets = new Map([
   [pomodoro.id, pomodoro],
   [quotes.id, quotes],
   [habits.id, habits],
+  [worldClock.id, worldClock],
 ]);
 
 export function getWidget(id) {

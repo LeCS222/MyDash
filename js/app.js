@@ -6,27 +6,36 @@ const CONFIG_KEY = 'mydash-config';
 
 let currentConfig = null;
 
-async function loadConfig() {
+async function fetchDefaultConfig() {
+  const response = await fetch('data/default-config.json');
+  const text = await response.text();
+  return JSON.parse(text);
+}
+
+async function loadConfig(defaultConfig) {
   const saved = localStorage.getItem(CONFIG_KEY);
   if (saved) {
     return JSON.parse(saved);
   }
-
-  const response = await fetch('data/default-config.json');
-  const text = await response.text();
-  return JSON.parse(text);
+  return defaultConfig;
 }
 
 function saveConfig(config) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
-function normalizeConfig(config) {
+function normalizeConfig(config, defaultConfig) {
   const before = JSON.stringify(config);
 
   config.settings = config.settings ?? {};
   config.settings.theme = normalizeTheme(config.settings.theme);
   config.widgets = (config.widgets ?? []).filter((id) => getWidget(id));
+
+  for (const id of defaultConfig?.widgets ?? []) {
+    if (getWidget(id) && !config.widgets.includes(id)) {
+      config.widgets.push(id);
+    }
+  }
 
   return { config, changed: JSON.stringify(config) !== before };
 }
@@ -85,8 +94,9 @@ function showError(message) {
 
 async function main() {
   try {
-    const loaded = await loadConfig();
-    const { config, changed } = normalizeConfig(loaded);
+    const defaultConfig = await fetchDefaultConfig();
+    const loaded = await loadConfig(defaultConfig);
+    const { config, changed } = normalizeConfig(loaded, defaultConfig);
     currentConfig = config;
 
     if (changed) {

@@ -1,6 +1,7 @@
 {
   "widgets": [
     "clock",
+    "world-clock",
     "weather",
     "currency",
     "notes",
