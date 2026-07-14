@@ -4,17 +4,47 @@ import { initLayoutDrag } from './layout.js';
 
 const CONFIG_KEY = 'mydash-config';
 
+const EMBEDDED_DEFAULT_CONFIG = {
+  widgets: [
+    'clock',
+    'world-clock',
+    'weather',
+    'currency',
+    'notes',
+    'todo',
+    'pomodoro',
+    'quotes',
+    'habits',
+  ],
+  settings: { theme: 'light', city: 'Moscow' },
+};
+
 let currentConfig = null;
 
 async function fetchDefaultConfig() {
-  const fallback = { widgets: [], settings: { theme: 'light', city: 'Moscow' } };
   try {
     const response = await fetch('data/default-config.json');
-    if (!response.ok) return fallback;
+    if (!response.ok) {
+      return structuredClone(EMBEDDED_DEFAULT_CONFIG);
+    }
     const text = await response.text();
-    return JSON.parse(text);
-  } catch {
-    return fallback;
+    try {
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed?.widgets)) {
+        throw new Error('Некорректный формат default-config.json');
+      }
+      return parsed;
+    } catch (parseErr) {
+      if (parseErr instanceof SyntaxError) {
+        throw new Error('Некорректный JSON в default-config.json');
+      }
+      throw parseErr;
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('default-config')) {
+      throw err;
+    }
+    return structuredClone(EMBEDDED_DEFAULT_CONFIG);
   }
 }
 
@@ -30,6 +60,9 @@ function saveConfig(config) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
+// Adds widgets from default-config.json that are missing in the saved layout.
+// Users cannot permanently remove newly shipped widgets by editing localStorage;
+// removed ids reappear on next load until default-config no longer lists them.
 function mergeWidgetsFromDefault(currentWidgets, defaultWidgets) {
   const current = (currentWidgets ?? []).filter((id) => getWidget(id));
   const defaultIds = (defaultWidgets ?? []).filter((id) => getWidget(id));

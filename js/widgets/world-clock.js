@@ -22,6 +22,8 @@ const DEFAULT_ZONES = PRESET_ZONES.filter((zone) =>
 
 let zones = [];
 let intervalId = null;
+let visibilityHandler = null;
+let lastOffsetMinute = -1;
 let listEl = null;
 let selectEl = null;
 let addButton = null;
@@ -135,34 +137,31 @@ function formatOffsetFromParts(date, timeZone) {
   return '';
 }
 
-function computeUtcOffsetLabel(date, timeZone) {
-  const fromIntl = formatOffsetFromParts(date, timeZone);
-  if (fromIntl) return fromIntl;
-
-  const utcMs = Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds(),
-  );
-  const localParts = new Intl.DateTimeFormat('en-US', {
+function getWallClockParts(date, timeZone) {
+  return new Intl.DateTimeFormat('en-US', {
     timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
   }).formatToParts(date);
-  const localMs = Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    Number(getPartValue(localParts, 'hour')),
-    Number(getPartValue(localParts, 'minute')),
-    Number(getPartValue(localParts, 'second')),
+}
+
+function wallClockToUtcMs(parts) {
+  return Date.UTC(
+    Number(getPartValue(parts, 'year')),
+    Number(getPartValue(parts, 'month')) - 1,
+    Number(getPartValue(parts, 'day')),
+    Number(getPartValue(parts, 'hour')),
+    Number(getPartValue(parts, 'minute')),
+    Number(getPartValue(parts, 'second')),
   );
-  const diffMin = (localMs - utcMs) / 60000;
+}
+
+function formatOffsetMinutes(diffMin) {
   const sign = diffMin >= 0 ? '+' : '-';
   const abs = Math.abs(diffMin);
   const hours = Math.floor(abs / 60);
@@ -170,6 +169,20 @@ function computeUtcOffsetLabel(date, timeZone) {
   return minutes === 0
     ? `UTC${sign}${hours}`
     : `UTC${sign}${hours}:${String(minutes).padStart(2, '0')}`;
+}
+
+function computeUtcOffsetLabel(date, timeZone) {
+  const fromIntl = formatOffsetFromParts(date, timeZone);
+  if (fromIntl) return fromIntl;
+
+  const utcParts = getWallClockParts(date, 'UTC');
+  const zoneParts = getWallClockParts(date, timeZone);
+  let diffMin = (wallClockToUtcMs(zoneParts) - wallClockToUtcMs(utcParts)) / 60000;
+
+  if (diffMin > 720) diffMin -= 1440;
+  if (diffMin < -720) diffMin += 1440;
+
+  return formatOffsetMinutes(diffMin);
 }
 
 function formatOffset(date, timeZone) {
@@ -188,20 +201,56 @@ function stopTimer() {
     clearInterval(intervalId);
     intervalId = null;
   }
+  if (visibilityHandler) {
+    document.removeEventListener('visibilitychange', visibilityHandler);
+    visibilityHandler = null;
+  }
 }
 
 function startTimer(tick) {
   stopTimer();
   intervalId = setInterval(tick, 1000);
+  visibilityHandler = () => {
+    if (document.hidden) {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      return;
+    }
+    if (intervalId === null) {
+      tick();
+      intervalId = setInterval(tick, 1000);
+    }
+  };
+  document.addEventListener('visibilitychange', visibilityHandler);
+}
+
+function tickTimes(now) {
+  for (const row of rowRefs) {
+    row.timeEl.textContent = formatTimeInZone(now, row.timeZone);
+    row.timeEl.dateTime = toIsoInZone(now, row.timeZone);
+  }
+}
+
+function tickOffsets(now) {
+  const minuteKey = Math.floor(now.getTime() / 60000);
+  if (minuteKey === lastOffsetMinute) return;
+  lastOffsetMinute = minuteKey;
+  for (const row of rowRefs) {
+    row.offsetEl.textContent = formatOffset(now, row.timeZone);
+  }
+}
+
+function refreshOffsets(now = new Date()) {
+  lastOffsetMinute = -1;
+  tickOffsets(now);
 }
 
 function tick() {
   const now = new Date();
-  for (const row of rowRefs) {
-    row.timeEl.textContent = formatTimeInZone(now, row.timeZone);
-    row.timeEl.dateTime = toIsoInZone(now, row.timeZone);
-    row.offsetEl.textContent = formatOffset(now, row.timeZone);
-  }
+  tickTimes(now);
+  tickOffsets(now);
 }
 
 function refreshSelect() {
@@ -295,7 +344,7 @@ export default {
   id: 'world-clock',
   title: 'Мировые часы',
 
-  init() {
+  init(_config) {
     const saved = storage.get(STORAGE_KEY, null);
     const normalized = normalizeState(saved);
     zones = normalized.zones;
@@ -336,6 +385,7 @@ export default {
       listEl.appendChild(createRow(preset));
       save();
       tick();
+      refreshOffsets();
       refreshSelect();
     });
 
@@ -348,6 +398,7 @@ export default {
 
     renderList();
     refreshSelect();
+    lastOffsetMinute = -1;
     tick();
     startTimer(tick);
   },
