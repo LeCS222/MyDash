@@ -23,6 +23,8 @@ export default {
   },
 
   render(container) {
+    container.replaceChildren();
+
     const quoteEl = document.createElement('blockquote');
     quoteEl.className = 'quotes-text';
     quoteEl.hidden = true;

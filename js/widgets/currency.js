@@ -188,6 +188,8 @@ export default {
   },
 
   render(container) {
+    container.replaceChildren();
+
     const listEl = document.createElement('ul');
     listEl.className = 'currency-list';
     listEl.hidden = true;

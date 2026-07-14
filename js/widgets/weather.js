@@ -33,6 +33,7 @@ function describeWeather(code) {
   return WMO_DESCRIPTIONS[code] ?? 'Неизвестно';
 }
 
+let appConfig = null;
 let city = 'Moscow';
 let activeRequest = 0;
 
@@ -88,10 +89,12 @@ export default {
   title: 'Погода',
 
   init(config) {
+    appConfig = config;
     city = config?.settings?.city ?? 'Moscow';
   },
 
   render(container) {
+    city = appConfig?.settings?.city ?? city;
     const requestId = ++activeRequest;
     showLoading(container);
     loadWeather(container, city, requestId);

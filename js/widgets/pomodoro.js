@@ -10,6 +10,9 @@ const PHASE_LABELS = {
 
 let state = { phase: 'work', remaining: WORK_SECONDS, completed: 0 };
 let intervalId = null;
+let visibilityHandler = null;
+let endsAt = null;
+let isRunning = false;
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -27,6 +30,51 @@ function phaseDuration(phase) {
 
 function save() {
   storage.set('pomodoro', state);
+}
+
+function remainingFromWallClock() {
+  if (endsAt === null) return state.remaining;
+  return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+}
+
+function stopIntervalOnly() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+}
+
+function detachVisibility() {
+  if (visibilityHandler) {
+    document.removeEventListener('visibilitychange', visibilityHandler);
+    visibilityHandler = null;
+  }
+}
+
+function stopTimer() {
+  stopIntervalOnly();
+  detachVisibility();
+  endsAt = null;
+  isRunning = false;
+}
+
+function startInterval(tick) {
+  stopIntervalOnly();
+  intervalId = setInterval(tick, 1000);
+}
+
+function attachVisibility(tick) {
+  detachVisibility();
+  visibilityHandler = () => {
+    if (document.hidden) {
+      stopIntervalOnly();
+      return;
+    }
+    if (!isRunning) return;
+    tick();
+    startInterval(tick);
+  };
+  document.addEventListener('visibilitychange', visibilityHandler);
 }
 
 export default {
@@ -47,13 +95,13 @@ export default {
         ? saved.completed
         : 0;
     state = { phase, remaining, completed };
+    endsAt = null;
+    isRunning = false;
   },
 
   render(container) {
-    if (intervalId !== null) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
+    stopTimer();
+    container.replaceChildren();
 
     const timeEl = document.createElement('div');
     timeEl.className = 'pomodoro-time';
@@ -88,8 +136,13 @@ export default {
 
     function updateDisplay() {
       timeEl.textContent = formatTime(state.remaining);
-      phaseEl.textContent = PHASE_LABELS[state.phase];
+      const label = PHASE_LABELS[state.phase];
+      const midPhase = state.remaining !== phaseDuration(state.phase);
+      phaseEl.textContent =
+        !isRunning && midPhase ? `${label} · пауза` : label;
       countEl.textContent = `Завершено циклов: ${state.completed}`;
+      startButton.disabled = isRunning;
+      pauseButton.disabled = !isRunning;
     }
 
     function advancePhase() {
@@ -103,31 +156,41 @@ export default {
     }
 
     function tick() {
-      if (state.remaining > 0) {
-        state.remaining -= 1;
-      }
+      if (!isRunning) return;
+
+      state.remaining = remainingFromWallClock();
+
       if (state.remaining === 0) {
         advancePhase();
+        endsAt = Date.now() + state.remaining * 1000;
       }
+
       save();
       updateDisplay();
     }
 
     function start() {
-      if (intervalId !== null) return;
-      intervalId = setInterval(tick, 1000);
+      if (isRunning) return;
+      isRunning = true;
+      endsAt = Date.now() + state.remaining * 1000;
+      attachVisibility(tick);
+      startInterval(tick);
+      updateDisplay();
     }
 
     function pause() {
-      if (intervalId === null) return;
-      clearInterval(intervalId);
-      intervalId = null;
+      if (!isRunning) return;
+      state.remaining = remainingFromWallClock();
+      stopTimer();
+      save();
+      updateDisplay();
     }
 
     function reset() {
-      pause();
+      stopTimer();
       state.phase = 'work';
       state.remaining = WORK_SECONDS;
+      state.completed = 0;
       save();
       updateDisplay();
     }

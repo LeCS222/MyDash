@@ -80,10 +80,16 @@ body {
   line-height: 1.5;
 }
 
-#app {
+.app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .app {
+    padding: 1.5rem;
+  }
 }
 
 .app-header {
@@ -135,7 +141,7 @@ body {
 
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
   gap: 1rem;
 }
 
@@ -209,6 +215,30 @@ body.is-dragging-widget {
   border-radius: 0.75rem;
   color: var(--text-muted);
   text-align: center;
+}
+
+.storage-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.storage-warning-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.storage-warning-dismiss {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 /* Clock widget */
@@ -498,11 +528,29 @@ button {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background 0.15s;
 }
 
-button:hover {
+button:not(
+  .widget-drag-handle,
+  .todo-delete,
+  .habits-delete,
+  .world-clock-remove,
+  .habits-prev,
+  .habits-next
+) {
+  transition: opacity 0.15s;
+}
+
+button:not(
+  .widget-drag-handle,
+  .todo-delete,
+  .habits-delete,
+  .world-clock-remove,
+  .habits-prev,
+  .habits-next
+):hover {
   background: var(--accent-hover);
+  opacity: 0.92;
 }
 
 .widget-drag-handle {
@@ -561,6 +609,8 @@ body.is-dragging-widget .widget-drag-handle {
 
 .todo-add {
   flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 .todo-list {
@@ -698,6 +748,8 @@ body.is-dragging-widget .widget-drag-handle {
 
 .habits-add {
   flex-shrink: 0;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 .habits-nav {
@@ -746,13 +798,12 @@ body.is-dragging-widget .widget-drag-handle {
 
 .habits-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, var(--habits-cell));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--habits-gap);
   margin-bottom: 0.5rem;
 }
 
 .habits-weekday {
-  width: var(--habits-cell);
   font-size: 0.75rem;
   color: var(--text-muted);
   text-align: center;
@@ -766,15 +817,28 @@ body.is-dragging-widget .widget-drag-handle {
 }
 
 .habits-calendar {
-  overflow-x: auto;
   max-width: 100%;
-  -webkit-overflow-scrolling: touch;
+}
+
+.widget-card[data-widget-id='habits'] .widget-body {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
 .habits-calendar-track {
-  --habits-cell: 2.75rem;
-  --habits-gap: 0.25rem;
-  min-width: calc(7 * var(--habits-cell) + 6 * var(--habits-gap));
+  --habits-gap: 0;
+  width: 100%;
+}
+
+@media (min-width: 400px) {
+  .widget-card[data-widget-id='habits'] .widget-body {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .habits-calendar-track {
+    --habits-gap: 0.125rem;
+  }
 }
 
 .habits-list {
@@ -830,15 +894,16 @@ body.is-dragging-widget .widget-drag-handle {
 
 .habits-grid {
   display: grid;
-  grid-template-columns: repeat(7, var(--habits-cell));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--habits-gap);
 }
 
 .habits-day {
-  width: var(--habits-cell);
-  height: var(--habits-cell);
-  min-width: var(--habits-cell);
-  min-height: var(--habits-cell);
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
@@ -874,10 +939,11 @@ body.is-dragging-widget .widget-drag-handle {
 }
 
 .habits-day--empty {
-  width: var(--habits-cell);
-  height: var(--habits-cell);
-  min-width: var(--habits-cell);
-  min-height: var(--habits-cell);
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border: none;
   background: transparent;
   pointer-events: none;

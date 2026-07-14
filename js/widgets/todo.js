@@ -98,6 +98,8 @@ export default {
   },
 
   render(container) {
+    container.replaceChildren();
+
     const form = document.createElement('form');
     form.className = 'todo-form';
 

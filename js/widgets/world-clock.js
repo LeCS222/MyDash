@@ -255,7 +255,7 @@ function tick() {
 
 function refreshSelect() {
   const available = getAvailablePresets(zones);
-  selectEl.innerHTML = '';
+  selectEl.replaceChildren();
 
   if (available.length === 0) {
     const option = document.createElement('option');
@@ -333,7 +333,7 @@ function createRow(zone) {
 }
 
 function renderList() {
-  listEl.innerHTML = '';
+  listEl.replaceChildren();
   rowRefs = [];
   for (const zone of zones) {
     listEl.appendChild(createRow(zone));
@@ -356,7 +356,7 @@ export default {
 
   render(container) {
     stopTimer();
-    container.innerHTML = '';
+    container.replaceChildren();
 
     const root = document.createElement('div');
     root.className = 'world-clock';

@@ -4,27 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MyDash</title>
-  <script>
-    (function () {
-      let theme = 'light';
-      try {
-        const raw = localStorage.getItem('mydash-config');
-        if (raw) {
-          const config = JSON.parse(raw);
-          if (config.settings && config.settings.theme) {
-            theme = config.settings.theme;
-          }
-        }
-      } catch (e) {
-        theme = 'light';
-      }
-      document.documentElement.classList.add('theme-' + theme);
-    })();
-  </script>
+  <script src="js/fouc-theme.js"></script>
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <div id="app">
+  <div id="app" class="app">
     <header class="app-header">
       <h1 class="app-logo">MyDash</h1>
       <div class="app-controls">
