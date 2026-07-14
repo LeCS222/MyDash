@@ -7,9 +7,15 @@ const CONFIG_KEY = 'mydash-config';
 let currentConfig = null;
 
 async function fetchDefaultConfig() {
-  const response = await fetch('data/default-config.json');
-  const text = await response.text();
-  return JSON.parse(text);
+  const fallback = { widgets: [], settings: { theme: 'light', city: 'Moscow' } };
+  try {
+    const response = await fetch('data/default-config.json');
+    if (!response.ok) return fallback;
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch {
+    return fallback;
+  }
 }
 
 async function loadConfig(defaultConfig) {
@@ -24,18 +30,51 @@ function saveConfig(config) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
+function mergeWidgetsFromDefault(currentWidgets, defaultWidgets) {
+  const current = (currentWidgets ?? []).filter((id) => getWidget(id));
+  const defaultIds = (defaultWidgets ?? []).filter((id) => getWidget(id));
+  const result = [...current];
+
+  for (const id of defaultIds) {
+    if (result.includes(id)) continue;
+
+    const defaultIndex = defaultIds.indexOf(id);
+    let insertAt = result.length;
+    let hasPredecessor = false;
+
+    for (let i = defaultIndex - 1; i >= 0; i -= 1) {
+      const predecessor = defaultIds[i];
+      const predecessorIndex = result.indexOf(predecessor);
+      if (predecessorIndex !== -1) {
+        insertAt = predecessorIndex + 1;
+        hasPredecessor = true;
+        break;
+      }
+    }
+
+    if (!hasPredecessor) {
+      for (let i = defaultIndex + 1; i < defaultIds.length; i += 1) {
+        const successor = defaultIds[i];
+        const successorIndex = result.indexOf(successor);
+        if (successorIndex !== -1) {
+          insertAt = successorIndex;
+          break;
+        }
+      }
+    }
+
+    result.splice(insertAt, 0, id);
+  }
+
+  return result;
+}
+
 function normalizeConfig(config, defaultConfig) {
   const before = JSON.stringify(config);
 
   config.settings = config.settings ?? {};
   config.settings.theme = normalizeTheme(config.settings.theme);
-  config.widgets = (config.widgets ?? []).filter((id) => getWidget(id));
-
-  for (const id of defaultConfig?.widgets ?? []) {
-    if (getWidget(id) && !config.widgets.includes(id)) {
-      config.widgets.push(id);
-    }
-  }
+  config.widgets = mergeWidgetsFromDefault(config.widgets, defaultConfig?.widgets);
 
   return { config, changed: JSON.stringify(config) !== before };
 }

@@ -30,10 +30,11 @@ let rowRefs = [];
 function isValidTimeZone(timeZone) {
   if (typeof timeZone !== 'string' || !timeZone) return false;
   try {
-    Intl.DateTimeFormat(undefined, { timeZone });
+    Intl.DateTimeFormat(undefined, { timeZone }).format(new Date());
     return true;
-  } catch {
-    return false;
+  } catch (err) {
+    if (err instanceof RangeError) return false;
+    throw err;
   }
 }
 
@@ -88,6 +89,10 @@ function getAvailablePresets(currentZones) {
   return PRESET_ZONES.filter((preset) => !used.has(preset.id));
 }
 
+function getPartValue(parts, type) {
+  return parts.find((part) => part.type === type)?.value ?? '00';
+}
+
 function formatTimeInZone(date, timeZone) {
   return new Intl.DateTimeFormat(LOCALE, {
     timeZone,
@@ -96,6 +101,21 @@ function formatTimeInZone(date, timeZone) {
     second: '2-digit',
     hour12: false,
   }).format(date);
+}
+
+function toIsoInZone(date, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+
+  return `${getPartValue(parts, 'year')}-${getPartValue(parts, 'month')}-${getPartValue(parts, 'day')}T${getPartValue(parts, 'hour')}:${getPartValue(parts, 'minute')}:${getPartValue(parts, 'second')}`;
 }
 
 function getTimeZoneNamePart(date, timeZone, timeZoneName) {
@@ -107,15 +127,42 @@ function getTimeZoneNamePart(date, timeZone, timeZoneName) {
     .find((part) => part.type === 'timeZoneName');
 }
 
-function computeUtcOffsetLabel(date, timeZone) {
-  const longOffset = getTimeZoneNamePart(date, timeZone, 'longOffset');
-  if (longOffset?.value) {
-    return longOffset.value.replace(/^GMT/, 'UTC');
+function formatOffsetFromParts(date, timeZone) {
+  for (const style of ['shortOffset', 'longOffset', 'short']) {
+    const part = getTimeZoneNamePart(date, timeZone, style);
+    if (part?.value) return part.value.replace(/^GMT/, 'UTC');
   }
+  return '';
+}
 
-  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const localDate = new Date(date.toLocaleString('en-US', { timeZone }));
-  const diffMin = (localDate - utcDate) / 60000;
+function computeUtcOffsetLabel(date, timeZone) {
+  const fromIntl = formatOffsetFromParts(date, timeZone);
+  if (fromIntl) return fromIntl;
+
+  const utcMs = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+  );
+  const localParts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const localMs = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    Number(getPartValue(localParts, 'hour')),
+    Number(getPartValue(localParts, 'minute')),
+    Number(getPartValue(localParts, 'second')),
+  );
+  const diffMin = (localMs - utcMs) / 60000;
   const sign = diffMin >= 0 ? '+' : '-';
   const abs = Math.abs(diffMin);
   const hours = Math.floor(abs / 60);
@@ -128,9 +175,9 @@ function computeUtcOffsetLabel(date, timeZone) {
 function formatOffset(date, timeZone) {
   try {
     const shortOffset = getTimeZoneNamePart(date, timeZone, 'shortOffset');
-    if (shortOffset?.value) return shortOffset.value;
-  } catch {
-    return computeUtcOffsetLabel(date, timeZone);
+    if (shortOffset?.value) return shortOffset.value.replace(/^GMT/, 'UTC');
+  } catch (err) {
+    if (!(err instanceof RangeError)) throw err;
   }
 
   return computeUtcOffsetLabel(date, timeZone);
@@ -152,6 +199,7 @@ function tick() {
   const now = new Date();
   for (const row of rowRefs) {
     row.timeEl.textContent = formatTimeInZone(now, row.timeZone);
+    row.timeEl.dateTime = toIsoInZone(now, row.timeZone);
     row.offsetEl.textContent = formatOffset(now, row.timeZone);
   }
 }
@@ -202,7 +250,7 @@ function createRow(zone) {
   const timeWrap = document.createElement('span');
   timeWrap.className = 'world-clock-time-wrap';
 
-  const timeEl = document.createElement('span');
+  const timeEl = document.createElement('time');
   timeEl.className = 'world-clock-time';
   timeEl.setAttribute('aria-live', 'off');
 
@@ -249,7 +297,12 @@ export default {
 
   init() {
     const saved = storage.get(STORAGE_KEY, null);
-    ({ zones } = normalizeState(saved));
+    const normalized = normalizeState(saved);
+    zones = normalized.zones;
+
+    if (JSON.stringify(saved) !== JSON.stringify({ zones })) {
+      save();
+    }
   },
 
   render(container) {
