@@ -1,10 +1,11 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
 
 let tasks = [];
 let listEl = null;
 
 function save() {
-  storage.set('todo', tasks);
+  storage.set(STORAGE_KEYS.todo, tasks);
 }
 
 function createId() {
@@ -90,7 +91,7 @@ export default {
   title: 'Список дел',
 
   init() {
-    const saved = storage.get('todo', []);
+    const saved = storage.get(STORAGE_KEYS.todo, []);
     tasks = normalizeTasks(saved);
     if (JSON.stringify(saved) !== JSON.stringify(tasks)) {
       save();

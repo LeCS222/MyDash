@@ -1,17 +1,17 @@
 import { getWidget, getAllWidgets } from './registry.js';
 import { applyTheme, initThemePicker, normalizeTheme } from './themes.js';
 import { initLayoutDrag } from './layout.js';
+import { initBackupControls } from './backup.js';
+import { isValidConfig } from './config-utils.js';
+import { showMessageBanner } from './banner.js';
 import * as storage from './storage.js';
+import { STORAGE_KEYS } from './storage-keys.js';
 import embeddedDefaultConfig from '../data/default-config.json' with { type: 'json' };
 
 const EMBEDDED_DEFAULT_CONFIG = embeddedDefaultConfig;
 
-function isValidConfig(data) {
-  return Boolean(data && typeof data === 'object' && Array.isArray(data.widgets));
-}
-
 function loadConfig(defaultConfig) {
-  const saved = storage.get('config', null);
+  const saved = storage.get(STORAGE_KEYS.config, null);
   if (isValidConfig(saved)) return saved;
   if (saved && typeof saved === 'object') {
     return {
@@ -52,7 +52,7 @@ async function fetchDefaultConfig() {
 }
 
 function saveConfig(config) {
-  storage.set('config', config);
+  storage.set(STORAGE_KEYS.config, config);
 }
 
 // Adds widgets from default-config.json that are missing in the saved layout.
@@ -131,33 +131,12 @@ function updateStorageBanner(kind) {
     ? `Не удалось сохранить данные (${[...keys].join(', ')}). Изменения могут не сохраниться.`
     : `Не удалось прочитать сохранённые данные (${[...keys].join(', ')}). Используются значения по умолчанию.`;
 
-  let banner = document.getElementById(bannerId);
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = bannerId;
-    banner.className = 'storage-warning';
-    banner.setAttribute('role', 'status');
-
-    const text = document.createElement('p');
-    text.className = 'storage-warning-text';
-
-    const dismiss = document.createElement('button');
-    dismiss.type = 'button';
-    dismiss.className = 'storage-warning-dismiss';
-    dismiss.textContent = 'Закрыть';
-    dismiss.setAttribute('aria-label', 'Закрыть предупреждение');
-    dismiss.addEventListener('click', () => {
-      keys.clear();
-      banner.remove();
-    });
-
-    banner.appendChild(text);
-    banner.appendChild(dismiss);
-    document.getElementById('app').prepend(banner);
-  }
-
-  const text = banner.querySelector('.storage-warning-text');
-  if (text) text.textContent = message;
+  showMessageBanner({
+    id: bannerId,
+    message,
+    role: 'status',
+    onDismiss: () => keys.clear(),
+  });
 }
 
 function showStorageWarning(key) {
@@ -271,6 +250,8 @@ async function main() {
     const key = event.detail?.key;
     if (typeof key === 'string') showStorageWriteWarning(key);
   });
+
+  initBackupControls(document.querySelector('.app-controls'));
 
   try {
     const defaultConfig = await fetchDefaultConfig();

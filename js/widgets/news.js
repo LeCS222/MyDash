@@ -1,7 +1,8 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
 
 const API_URL = 'https://ok.surf/api/v1/cors/news-section';
-const STORAGE_KEY = 'news-cache';
+const STORAGE_KEY = STORAGE_KEYS.newsCache;
 const HEADLINE_LIMIT = 6;
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_SECTION = 'Technology';

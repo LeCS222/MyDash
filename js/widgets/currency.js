@@ -1,4 +1,6 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
+import { ISO_DATE_RE } from '../widget-limits.js';
 
 const PAIRS = [
   { base: 'EUR', label: 'Евро' },
@@ -7,9 +9,8 @@ const PAIRS = [
 ];
 const QUOTE = 'RUB';
 const API_BASE = 'https://api.frankfurter.dev/v2/rate';
-const STORAGE_KEY = 'currency';
+const STORAGE_KEY = STORAGE_KEYS.currency;
 const CACHE_TTL_MS = 60 * 60 * 1000;
-const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const ERROR_MESSAGES = {
   network: 'Сеть недоступна. Проверьте подключение.',

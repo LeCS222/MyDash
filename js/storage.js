@@ -1,4 +1,4 @@
-const PREFIX = 'mydash-';
+import { STORAGE_PREFIX } from './storage-keys.js';
 
 function notifyCorrupted(key) {
   if (typeof document === 'undefined') return;
@@ -16,7 +16,7 @@ function notifyWriteFailed(key) {
 
 export function get(key, fallback = null) {
   try {
-    const raw = localStorage.getItem(PREFIX + key);
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
     if (raw === null) return fallback;
     return JSON.parse(raw);
   } catch {
@@ -27,7 +27,7 @@ export function get(key, fallback = null) {
 
 export function set(key, value) {
   try {
-    localStorage.setItem(PREFIX + key, JSON.stringify(value));
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
     return true;
   } catch {
     notifyWriteFailed(key);
@@ -37,7 +37,7 @@ export function set(key, value) {
 
 export function remove(key) {
   try {
-    localStorage.removeItem(PREFIX + key);
+    localStorage.removeItem(STORAGE_PREFIX + key);
     return true;
   } catch {
     notifyWriteFailed(key);

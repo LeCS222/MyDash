@@ -1,8 +1,9 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
 
 const API_URL = 'https://dummyjson.com/quotes/random';
 const TRANSLATE_URL = 'https://api.mymemory.translated.net/get';
-const STORAGE_KEY = 'quotes-ru';
+const STORAGE_KEY = STORAGE_KEYS.quotesRu;
 const MAX_TRANSLATE_CHUNK = 450;
 
 const ERROR_MESSAGES = {

@@ -1,4 +1,5 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
 
 let savedText = '';
 let persistAbort = null;
@@ -8,7 +9,7 @@ export default {
   title: 'Заметки',
 
   init() {
-    savedText = storage.get('notes', '');
+    savedText = storage.get(STORAGE_KEYS.notes, '');
   },
 
   render(container) {
@@ -31,23 +32,27 @@ export default {
         clearTimeout(debounceTimer);
         debounceTimer = null;
       }
+      if (textarea.value === savedText) return;
       savedText = textarea.value;
-      storage.set('notes', savedText);
+      storage.set(STORAGE_KEYS.notes, savedText);
     }
 
     function schedulePersist() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         debounceTimer = null;
-        savedText = textarea.value;
-        storage.set('notes', savedText);
+        persist();
       }, 300);
+    }
+
+    function persistOnUnload() {
+      persist();
     }
 
     textarea.addEventListener('input', schedulePersist, { signal });
     textarea.addEventListener('blur', persist, { signal });
-    window.addEventListener('pagehide', persist, { signal });
-    window.addEventListener('beforeunload', persist, { signal });
+    window.addEventListener('pagehide', persistOnUnload, { signal });
+    window.addEventListener('beforeunload', persistOnUnload, { signal });
 
     container.appendChild(textarea);
   },

@@ -1,9 +1,11 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
+import { MAX_WORLD_CLOCK_ZONES } from '../widget-limits.js';
 
 const LOCALE = 'ru-RU';
 const MOSCOW_ID = 'moscow';
-const MAX_ZONES = 6;
-const STORAGE_KEY = 'world-clock';
+const MAX_ZONES = MAX_WORLD_CLOCK_ZONES;
+const STORAGE_KEY = STORAGE_KEYS.worldClock;
 
 const PRESET_ZONES = [
   { id: 'moscow', label: 'Москва', timeZone: 'Europe/Moscow' },

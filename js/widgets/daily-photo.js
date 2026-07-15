@@ -1,7 +1,8 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
 
-const CACHE_KEY = 'daily-photo-cache';
-const SETTINGS_KEY = 'daily-photo-settings';
+const CACHE_KEY = STORAGE_KEYS.dailyPhotoCache;
+const SETTINGS_KEY = STORAGE_KEYS.dailyPhotoSettings;
 const DAY_CHECK_MS = 5 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 10_000;
 const MOBILE_BREAKPOINT = 768;

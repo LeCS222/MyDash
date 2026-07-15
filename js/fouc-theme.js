@@ -1,11 +1,12 @@
 (function () {
-  // Keep PREFIX in sync with js/storage.js. Theme id is applied as-is for FOUC;
-  // js/themes.js normalizes invalid values after modules load.
+  // Keep in sync with js/storage-keys.js (STORAGE_PREFIX, STORAGE_KEYS.config).
+  // Theme id is applied as-is for FOUC; js/themes.js normalizes invalid values after modules load.
   const PREFIX = 'mydash-';
+  const CONFIG_KEY = 'config';
 
   let theme = 'light';
   try {
-    const raw = localStorage.getItem(PREFIX + 'config');
+    const raw = localStorage.getItem(PREFIX + CONFIG_KEY);
     if (raw) {
       const config = JSON.parse(raw);
       const saved = config.settings && config.settings.theme;

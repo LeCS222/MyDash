@@ -23,9 +23,13 @@ export default {
 2. Импортировать и зарегистрировать в `js/registry.js`
 3. Добавить id в массив `widgets` в `data/default-config.json`
 4. Добавить CSS-классы в `styles/main.css` при необходимости
+5. Если виджет пишет в localStorage — добавить ключ в `js/storage-keys.js`
+   (`STORAGE_KEYS` + `USER_DATA_KEYS` для данных пользователя или `CACHE_KEYS`
+   для API-кэша) и использовать константу из `STORAGE_KEYS` в виджете
 
 ## Правила
 
 - Состояние сохраняй через `js/storage.js` (`get`, `set`, `remove`)
+- Ключи storage бери только из `js/storage-keys.js` — не хардкодь строки
 - Не используй inline-стили (`element.style`, атрибут `style`)
 - Не обращайся к DOM вне переданного `container`, кроме глобальных событий

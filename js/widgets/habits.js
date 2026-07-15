@@ -1,4 +1,6 @@
 import * as storage from '../storage.js';
+import { STORAGE_KEYS } from '../storage-keys.js';
+import { ISO_DATE_RE } from '../widget-limits.js';
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const NAME_MAX = 80;
@@ -13,7 +15,7 @@ let monthLabelEl = null;
 let nextButton = null;
 
 function save() {
-  storage.set('habits', habits);
+  storage.set(STORAGE_KEYS.habits, habits);
 }
 
 function dedupeHabits(items) {
@@ -244,7 +246,7 @@ export default {
   title: 'Привычки',
 
   init() {
-    const saved = storage.get('habits', []);
+    const saved = storage.get(STORAGE_KEYS.habits, []);
     const todayKey = getTodayKey();
     let sanitized = false;
 
@@ -260,7 +262,7 @@ export default {
           const rawDates = Array.isArray(h.dates) ? h.dates : [];
           const dates = [];
           for (const d of rawDates) {
-            if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayKey) {
+            if (ISO_DATE_RE.test(d) && d <= todayKey) {
               dates.push(d);
             } else {
               sanitized = true;
@@ -281,7 +283,7 @@ export default {
             dates,
             createdAt:
               typeof h.createdAt === 'string' &&
-              /^\d{4}-\d{2}-\d{2}$/.test(h.createdAt)
+              ISO_DATE_RE.test(h.createdAt)
                 ? h.createdAt
                 : todayKey,
           };

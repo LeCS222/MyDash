@@ -1,7 +1,6 @@
 import * as storage from '../storage.js';
-
-const WORK_SECONDS = 25 * 60;
-const BREAK_SECONDS = 5 * 60;
+import { STORAGE_KEYS } from '../storage-keys.js';
+import { WORK_SECONDS, BREAK_SECONDS } from '../widget-limits.js';
 
 const PHASE_LABELS = {
   work: 'Работа',
@@ -29,7 +28,7 @@ function phaseDuration(phase) {
 }
 
 function save() {
-  storage.set('pomodoro', state);
+  storage.set(STORAGE_KEYS.pomodoro, state);
 }
 
 function remainingFromWallClock() {
@@ -82,7 +81,7 @@ export default {
   title: 'Таймер Pomodoro',
 
   init() {
-    const saved = storage.get('pomodoro', null);
+    const saved = storage.get(STORAGE_KEYS.pomodoro, null);
     const phase = saved?.phase === 'break' ? 'break' : 'work';
     const remaining =
       Number.isInteger(saved?.remaining) &&
