@@ -69,10 +69,15 @@ function buildImageUrl(date, currentSettings) {
 
 function debounce(fn, ms) {
   let timer = null;
-  return (...args) => {
+  const debounced = (...args) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), ms);
   };
+  debounced.cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+  };
+  return debounced;
 }
 
 const debouncedSyncBackground = debounce(() => {
@@ -243,6 +248,9 @@ async function syncBackground({ forceInfo = false } = {}) {
 }
 
 function teardown() {
+  debouncedSyncBackground.cancel();
+  debouncedPersistSettings.cancel();
+
   for (const fn of cleanupFns) fn();
   cleanupFns = [];
 

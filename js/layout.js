@@ -126,14 +126,40 @@ function releasePointerCaptureSafe(handle, pointerId) {
 }
 
 // Drag session owns widget order until cleanup; ignores external config changes.
+const DRAG_HANDLE_LABEL = 'Переместить виджет: стрелки — сдвиг, пробел — захват';
+const DRAG_HANDLE_GRABBED_LABEL = 'Виджет захвачен: стрелки — сдвиг, пробел — отпустить, Escape — отмена';
+
+export { DRAG_HANDLE_LABEL };
+
 export function initLayoutDrag(grid, getConfig, saveConfig) {
   let session = null;
+  let keyboardGrabCard = null;
+
+  function releaseKeyboardGrab(card) {
+    if (!card || keyboardGrabCard !== card) return;
+
+    keyboardGrabCard = null;
+    card.classList.remove('widget-card--keyboard-grab');
+    const handle = card.querySelector('.widget-drag-handle');
+    if (handle) {
+      handle.setAttribute('aria-grabbed', 'false');
+      handle.setAttribute('aria-label', DRAG_HANDLE_LABEL);
+    }
+  }
+
+  function activateKeyboardGrab(card, handle) {
+    keyboardGrabCard = card;
+    card.classList.add('widget-card--keyboard-grab');
+    handle.setAttribute('aria-grabbed', 'true');
+    handle.setAttribute('aria-label', DRAG_HANDLE_GRABBED_LABEL);
+  }
 
   function cleanupSession(rollback = false) {
     if (!session) return;
 
     const { handle, card, pointerId, originalOrder } = session;
     session = null;
+    releaseKeyboardGrab(card);
 
     if (rollback) {
       rollbackDom(originalOrder);
@@ -198,6 +224,10 @@ export function initLayoutDrag(grid, getConfig, saveConfig) {
 
     const card = handle.closest('.widget-card');
     if (!card) return;
+
+    if (keyboardGrabCard) {
+      releaseKeyboardGrab(keyboardGrabCard);
+    }
 
     const fromIndex = getCardIndex(grid, card);
     if (fromIndex === -1) return;
@@ -283,8 +313,25 @@ export function initLayoutDrag(grid, getConfig, saveConfig) {
     const handle = event.target.closest('.widget-drag-handle');
     if (!handle || session) return;
 
+    const card = handle.closest('.widget-card');
+    if (!card) return;
+
+    if (event.key === 'Escape') {
+      if (keyboardGrabCard === card) {
+        event.preventDefault();
+        releaseKeyboardGrab(card);
+      }
+      return;
+    }
+
     if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault();
+      if (keyboardGrabCard === card) {
+        releaseKeyboardGrab(card);
+      } else {
+        if (keyboardGrabCard) releaseKeyboardGrab(keyboardGrabCard);
+        activateKeyboardGrab(card, handle);
+      }
       return;
     }
 
@@ -292,10 +339,6 @@ export function initLayoutDrag(grid, getConfig, saveConfig) {
     if (!direction) return;
 
     event.preventDefault();
-
-    const card = handle.closest('.widget-card');
-    if (!card) return;
-
     moveCardByKeyboard(card, direction);
   }
 

@@ -1,7 +1,8 @@
 import * as storage from '../storage.js';
 import { STORAGE_KEYS } from '../storage-keys.js';
 
-const API_URL = 'https://ok.surf/api/v1/cors/news-section';
+const OKSURF_API_URL = 'https://ok.surf/api/v1/cors/news-section';
+const GOOGLE_NEWS_LOCALE = 'hl=ru&gl=RU&ceid=RU:ru';
 const STORAGE_KEY = STORAGE_KEYS.newsCache;
 const HEADLINE_LIMIT = 6;
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -18,6 +19,33 @@ const NEWS_SECTIONS = [
   'US',
 ];
 
+const SECTION_TOPICS = {
+  Business: 'BUSINESS',
+  Technology: 'TECHNOLOGY',
+  World: 'WORLD',
+  Science: 'SCIENCE',
+  Sports: 'SPORTS',
+  Entertainment: 'ENTERTAINMENT',
+  Health: 'HEALTH',
+  US: 'NATION',
+};
+
+const SECTION_LABELS = {
+  Business: 'Бизнес',
+  Technology: 'Технологии',
+  World: 'Мир',
+  Science: 'Наука',
+  Sports: 'Спорт',
+  Entertainment: 'Развлечения',
+  Health: 'Здоровье',
+  US: 'США',
+};
+
+const CORS_PROXIES = [
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
+
 const ERROR_MESSAGES = {
   network: 'Сеть недоступна. Проверьте подключение.',
   fetch: 'Не удалось загрузить новости. Попробуйте позже.',
@@ -29,6 +57,7 @@ const STATUS_TEXT = {
   empty: 'Нет новостей в этом разделе',
 };
 
+let appConfig = null;
 let cachedData = null;
 let newsSection = DEFAULT_SECTION;
 let activeAbortController = null;
@@ -38,6 +67,14 @@ function normalizeSection(section) {
     return section;
   }
   return DEFAULT_SECTION;
+}
+
+function saveSectionToConfig(section) {
+  newsSection = section;
+  if (!appConfig) return;
+  appConfig.settings = appConfig.settings ?? {};
+  appConfig.settings.newsSection = section;
+  storage.set(STORAGE_KEYS.config, appConfig);
 }
 
 function isValidCache(data, currentSection) {
@@ -96,7 +133,7 @@ function getErrorMessage(err) {
   return ERROR_MESSAGES.fetch;
 }
 
-function parseHeadlines(data, section) {
+function parseHeadlinesFromJson(data, section) {
   const articles = data?.[section];
   if (!Array.isArray(articles)) {
     throw new NewsError('parse');
@@ -108,10 +145,74 @@ function parseHeadlines(data, section) {
     .map(({ title, link, source }) => ({ title, link, source }));
 }
 
-async function fetchNews(section, signal) {
+function parseHeadlinesFromRss(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (doc.querySelector('parsererror')) {
+    throw new NewsError('parse');
+  }
+
+  const items = [...doc.querySelectorAll('item')];
+  const headlines = [];
+
+  for (const item of items) {
+    const title = item.querySelector('title')?.textContent?.trim() ?? '';
+    const link = item.querySelector('link')?.textContent?.trim() ?? '';
+    const source = item.querySelector('source')?.textContent?.trim()
+      ?? 'Google News';
+
+    const parsed = { title, link, source };
+    if (!isValidHeadline(parsed)) continue;
+    headlines.push(parsed);
+    if (headlines.length >= HEADLINE_LIMIT) break;
+  }
+
+  return headlines;
+}
+
+function buildGoogleNewsRssUrl(section) {
+  const topic = SECTION_TOPICS[section] ?? SECTION_TOPICS[DEFAULT_SECTION];
+  return `https://news.google.com/rss/headlines/section/topic/${topic}?${GOOGLE_NEWS_LOCALE}`;
+}
+
+async function fetchText(url, signal) {
   let res;
   try {
-    res = await fetch(API_URL, {
+    res = await fetch(url, { signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    throw new NewsError('network');
+  }
+
+  if (!res.ok) throw new NewsError('fetch');
+  return res.text();
+}
+
+async function fetchRssViaProxies(rssUrl, signal) {
+  let lastError = new NewsError('fetch');
+
+  for (const wrap of CORS_PROXIES) {
+    try {
+      const text = await fetchText(wrap(rssUrl), signal);
+      if (text.trim()) return text;
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      lastError = err;
+    }
+  }
+
+  throw lastError instanceof NewsError ? lastError : new NewsError('fetch');
+}
+
+async function fetchNewsFromRss(section, signal) {
+  const rssUrl = buildGoogleNewsRssUrl(section);
+  const xml = await fetchRssViaProxies(rssUrl, signal);
+  return parseHeadlinesFromRss(xml);
+}
+
+async function fetchNewsFromOksurf(section, signal) {
+  let res;
+  try {
+    res = await fetch(OKSURF_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sections: [section] }),
@@ -131,7 +232,21 @@ async function fetchNews(section, signal) {
     throw new NewsError('fetch');
   }
 
-  return parseHeadlines(data, section);
+  return parseHeadlinesFromJson(data, section);
+}
+
+async function fetchNews(section, signal) {
+  try {
+    return await fetchNewsFromRss(section, signal);
+  } catch (rssErr) {
+    if (rssErr.name === 'AbortError') throw rssErr;
+    try {
+      return await fetchNewsFromOksurf(section, signal);
+    } catch (okErr) {
+      if (okErr.name === 'AbortError') throw okErr;
+      throw rssErr instanceof NewsError ? rssErr : okErr;
+    }
+  }
 }
 
 function setStatus(els, mode, text = '') {
@@ -161,6 +276,7 @@ function setStatus(els, mode, text = '') {
 
 function setLoading(els, isLoading) {
   els.refreshBtn.disabled = isLoading;
+  els.sectionSelect.disabled = isLoading;
   if (isLoading) {
     els.refreshBtn.setAttribute('aria-busy', 'true');
   } else {
@@ -263,13 +379,32 @@ export default {
   title: 'Новости',
 
   init(config) {
+    appConfig = config;
     newsSection = normalizeSection(config?.settings?.newsSection);
     const stored = storage.get(STORAGE_KEY, null);
     cachedData = isValidCache(stored, newsSection) ? stored : null;
   },
 
   render(container) {
+    newsSection = normalizeSection(appConfig?.settings?.newsSection ?? newsSection);
     container.replaceChildren();
+
+    const controls = document.createElement('div');
+    controls.className = 'news-controls';
+
+    const sectionSelect = document.createElement('select');
+    sectionSelect.className = 'news-section-select';
+    sectionSelect.setAttribute('aria-label', 'Раздел новостей');
+
+    for (const section of NEWS_SECTIONS) {
+      const option = document.createElement('option');
+      option.value = section;
+      option.textContent = SECTION_LABELS[section] ?? section;
+      sectionSelect.appendChild(option);
+    }
+    sectionSelect.value = newsSection;
+
+    controls.appendChild(sectionSelect);
 
     const listEl = document.createElement('ul');
     listEl.className = 'news-list';
@@ -286,15 +421,23 @@ export default {
     refreshBtn.className = 'news-refresh';
     refreshBtn.textContent = 'Обновить';
 
+    container.appendChild(controls);
     container.appendChild(listEl);
     container.appendChild(statusEl);
     container.appendChild(refreshBtn);
 
-    const els = { listEl, statusEl, refreshBtn };
+    const els = { listEl, statusEl, refreshBtn, sectionSelect };
 
     if (isCacheUsable(cachedData, newsSection)) {
       applyCachedView(els, cachedData);
     }
+
+    sectionSelect.addEventListener('change', () => {
+      const nextSection = normalizeSection(sectionSelect.value);
+      if (nextSection === newsSection) return;
+      saveSectionToConfig(nextSection);
+      loadHeadlines(els, newsSection, { force: true });
+    });
 
     refreshBtn.addEventListener('click', () => {
       loadHeadlines(els, newsSection, { force: true });

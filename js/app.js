@@ -1,6 +1,6 @@
 import { getWidget, getAllWidgets } from './registry.js';
 import { applyTheme, initThemePicker, normalizeTheme } from './themes.js';
-import { initLayoutDrag } from './layout.js';
+import { initLayoutDrag, DRAG_HANDLE_LABEL } from './layout.js';
 import { initBackupControls } from './backup.js';
 import { isValidConfig } from './config-utils.js';
 import { showMessageBanner } from './banner.js';
@@ -213,8 +213,9 @@ function renderWidgetGrid(widgetIds, config) {
     handle.className = 'widget-drag-handle';
     handle.setAttribute(
       'aria-label',
-      'Переместить виджет стрелками',
+      DRAG_HANDLE_LABEL,
     );
+    handle.setAttribute('aria-grabbed', 'false');
     handle.textContent = '⠿';
 
     header.appendChild(title);

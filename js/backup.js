@@ -15,6 +15,12 @@ const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const MISSING = Symbol('missing');
 const USER_DATA_KEY_SET = new Set(USER_DATA_KEYS);
 
+/**
+ * Stepwise migrations from older backup versions to BACKUP_VERSION.
+ * Add a handler when bumping BACKUP_VERSION, e.g. 1: (backup) => ({ ...backup, version: 2 }).
+ */
+const BACKUP_MIGRATIONS = Object.freeze({});
+
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -167,13 +173,20 @@ function migrateBackup(parsed) {
     return { ok: false, error: 'Файл бэкапа создан в более новой версии MyDash' };
   }
 
-  const backup = {
+  let backup = {
     ...parsed,
     data: isPlainObject(parsed.data) ? { ...parsed.data } : parsed.data,
   };
 
-  if (backup.version !== BACKUP_VERSION) {
-    return { ok: false, error: 'Некорректный файл бэкапа' };
+  while (backup.version < BACKUP_VERSION) {
+    const migrate = BACKUP_MIGRATIONS[backup.version];
+    if (typeof migrate !== 'function') {
+      return { ok: false, error: 'Некорректный файл бэкапа' };
+    }
+    backup = migrate(backup);
+    if (!backup || typeof backup.version !== 'number') {
+      return { ok: false, error: 'Некорректный файл бэкапа' };
+    }
   }
 
   return { ok: true, backup };

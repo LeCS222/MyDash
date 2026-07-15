@@ -15,6 +15,7 @@ export const STORAGE_KEYS = Object.freeze({
   dailyPhotoSettings: 'daily-photo-settings',
   dailyPhotoCache: 'daily-photo-cache',
   newsCache: 'news-cache',
+  weather: 'weather',
   currency: 'currency',
   quotesRu: 'quotes-ru',
 });
@@ -34,6 +35,7 @@ export const USER_DATA_KEYS = Object.freeze([
 export const CACHE_KEYS = Object.freeze([
   STORAGE_KEYS.dailyPhotoCache,
   STORAGE_KEYS.newsCache,
+  STORAGE_KEYS.weather,
   STORAGE_KEYS.currency,
   STORAGE_KEYS.quotesRu,
 ]);
