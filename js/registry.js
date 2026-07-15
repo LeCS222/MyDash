@@ -8,6 +8,7 @@ import quotes from './widgets/quotes.js';
 import habits from './widgets/habits.js';
 import worldClock from './widgets/world-clock.js';
 import news from './widgets/news.js';
+import dailyPhoto from './widgets/daily-photo.js';
 
 const widgets = new Map([
   [clock.id, clock],
@@ -20,6 +21,7 @@ const widgets = new Map([
   [habits.id, habits],
   [worldClock.id, worldClock],
   [news.id, news],
+  [dailyPhoto.id, dailyPhoto],
 ]);
 
 export function getWidget(id) {

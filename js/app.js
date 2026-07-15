@@ -1,4 +1,4 @@
-import { getWidget } from './registry.js';
+import { getWidget, getAllWidgets } from './registry.js';
 import { applyTheme, initThemePicker, normalizeTheme } from './themes.js';
 import { initLayoutDrag } from './layout.js';
 import * as storage from './storage.js';
@@ -170,13 +170,53 @@ function showStorageWriteWarning(key) {
   updateStorageBanner('write');
 }
 
+function clearBackgroundLayer() {
+  for (const widget of getAllWidgets()) {
+    if (widget.layout === 'background' && typeof widget.teardown === 'function') {
+      widget.teardown();
+    }
+  }
+  const bgHost = document.getElementById('page-background');
+  if (bgHost) bgHost.replaceChildren();
+}
+
+/** Один слой #page-background — монтируется первый background-виджет из списка. */
+function findBackgroundWidgetId(widgetIds) {
+  return widgetIds.find((id) => {
+    const widget = getWidget(id);
+    return widget?.layout === 'background'
+      && typeof widget.renderBackground === 'function';
+  }) ?? null;
+}
+
+function mountBackgroundWidget(widgetIds, config) {
+  const bgId = findBackgroundWidgetId(widgetIds);
+  if (!bgId) return;
+
+  const widget = getWidget(bgId);
+  const bgHost = document.getElementById('page-background');
+  if (!widget || !bgHost) return;
+
+  widget.init(config);
+  widget.renderBackground(bgHost);
+}
+
 function renderWidgetGrid(widgetIds, config) {
   const grid = document.getElementById('widget-grid');
   grid.replaceChildren();
 
+  clearBackgroundLayer();
+  mountBackgroundWidget(widgetIds, config);
+
+  const backgroundWidgetId = findBackgroundWidgetId(widgetIds);
+
   for (const id of widgetIds) {
     const widget = getWidget(id);
     if (!widget) continue;
+
+    if (id !== backgroundWidgetId) {
+      widget.init(config);
+    }
 
     const card = document.createElement('article');
     card.className = 'widget-card';
@@ -208,7 +248,6 @@ function renderWidgetGrid(widgetIds, config) {
     card.appendChild(body);
     grid.appendChild(card);
 
-    widget.init(config);
     widget.render(body);
   }
 }

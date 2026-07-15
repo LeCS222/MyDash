@@ -10,6 +10,7 @@
   --button-text: #ffffff;
   --input-bg: #f9fafb;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --daily-photo-overlay: 0.35;
 }
 
 .theme-dark {
@@ -23,6 +24,7 @@
   --button-text: #ffffff;
   --input-bg: #0f172a;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --daily-photo-overlay: 0.5;
 }
 
 .theme-golden {
@@ -36,6 +38,7 @@
   --button-text: #ffffff;
   --input-bg: #f5f0e6;
   --shadow: 0 1px 3px rgba(120, 90, 30, 0.1);
+  --daily-photo-overlay: 0.4;
 }
 
 .theme-birch {
@@ -49,6 +52,7 @@
   --button-text: #ffffff;
   --input-bg: #eef2ea;
   --shadow: 0 1px 3px rgba(40, 80, 40, 0.08);
+  --daily-photo-overlay: 0.35;
 }
 
 .theme-salad {
@@ -62,6 +66,7 @@
   --button-text: #ffffff;
   --input-bg: #eef8ea;
   --shadow: 0 1px 3px rgba(60, 120, 40, 0.08);
+  --daily-photo-overlay: 0.35;
 }
 
 *,
@@ -80,7 +85,34 @@ body {
   line-height: 1.5;
 }
 
+.page-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.page-background--hidden {
+  visibility: hidden;
+}
+
+.daily-photo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.daily-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--daily-photo-overlay));
+  pointer-events: none;
+}
+
 .app {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
@@ -497,6 +529,94 @@ body.is-dragging-widget {
 }
 
 .quotes-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Daily photo widget */
+.daily-photo-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  background: var(--input-bg);
+}
+
+.daily-photo-attribution {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.daily-photo-attribution a {
+  color: var(--accent);
+}
+
+.daily-photo-attribution a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.daily-photo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.daily-photo-toggle,
+.daily-photo-grayscale {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.daily-photo-blur-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.daily-photo-blur {
+  width: 100%;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.daily-photo-blur:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.daily-photo-status {
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+
+.daily-photo-error {
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+  color: var(--text);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+.daily-photo-refresh {
+  min-height: 2.75rem;
+}
+
+.daily-photo-refresh:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.daily-photo-refresh:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
