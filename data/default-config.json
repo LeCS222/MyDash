@@ -8,10 +8,12 @@
     "todo",
     "pomodoro",
     "quotes",
-    "habits"
+    "habits",
+    "news"
   ],
   "settings": {
     "theme": "light",
-    "city": "Moscow"
+    "city": "Moscow",
+    "newsSection": "Technology"
   }
 }
